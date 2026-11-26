@@ -1,21 +1,34 @@
-// Fortune cookie for a software engineer: the cookie promises a first-try
-// compile, then admits it is the only thing in the engineer's life that
-// lies kindly — a fortune that flatters the reader and insults them at once.
-//
-// Run: node main.ts  (writes /output/entry.txt; override with
-// MAKEFUN_OUTPUT_DIR for a local run)
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+// Fortune Cookie Funnies for Engineers — a fortune-cookie message aimed at
+// a software engineer, one line of at most 120 characters. The program below
+// validates the line against the competition gate, then writes it to
+// entry.txt under $MAKEFUN_OUTPUT_DIR (falling back to /output).
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-const OUT = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const MAX_CHARS = 120;
 
+// The fortune: good news first, then the catch every engineer already knows by heart.
 const ENTRY =
-  "Your code will compile on the first try. This cookie is the only thing in your life that lies to you kindly.";
+  "Your code will compile on the first try. Your code review will not. Eat the cookie. Deploy on Friday anyway.";
 
-if ([...ENTRY].length > 120) throw new Error('entry over 120 characters');
-if (ENTRY.includes('\n')) throw new Error('entry must be a single line');
-if (!ENTRY.trim()) throw new Error('entry is empty');
+function fail(message: string): never {
+  console.error(`error: ${message}`);
+  process.exit(1);
+}
 
-mkdirSync(OUT, { recursive: true });
-writeFileSync(join(OUT, 'entry.txt'), ENTRY, 'utf8');
-console.log(ENTRY);
+const line = ENTRY.trim();
+if (/[\r\n]/.test(line)) {
+  fail("entry must be one line, no line breaks allowed");
+}
+if (line.length === 0) {
+  fail("entry is blank");
+}
+if (line.length > MAX_CHARS) {
+  fail(`entry is ${line.length} characters, over the ${MAX_CHARS} limit`);
+}
+
+const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+mkdirSync(outDir, { recursive: true });
+const outPath = join(outDir, "entry.txt");
+writeFileSync(outPath, line, "utf8");
+console.log(`wrote ${line.length} characters to ${outPath}`);
